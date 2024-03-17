@@ -90,6 +90,12 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
         ],
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('DB_URI', 'mongodb+srv://papitamcfly1234:papitamanxD12>@cines.98d9swj.mongodb.net/?retryWrites=true&w=majority&appName=Cines'),
+            'database' => 'sample_mflix',
+          ],
+    
 
     ],
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\BoletoController;
 use App\Http\Controllers\CombosController;
 use App\Http\Controllers\GenerosController;
 use App\Http\Controllers\PeliculasController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductosController;
 use App\Http\Controllers\usuarioscontroller;
 use Illuminate\Http\Request;
@@ -118,3 +119,6 @@ Route::middleware(['auth:api','role:3'])->group(function () {
     Route::delete('/usuarios/{combo}', [usuarioscontroller::class, 'destroy'])->where('combo', '[0-9]+')->name('deleteusuarios');
     Route::get('/roles',[usuarioscontroller::class,'showroles']);
 });
+Route::resource('posts', PostController::class)->only([
+    'destroy', 'show', 'store', 'update'
+ ]);
