@@ -16,7 +16,7 @@ class User extends Authenticatable implements JWTSubject
     public $timestamps = false;
     public function tokens()
     {
-        return $this->hasMany(PersonalAccessToken::class);
+        return $this->morphMany(PersonalAccessToken::class, 'tokenable');
     }
 
     public function rol()

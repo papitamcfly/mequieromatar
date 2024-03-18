@@ -39,7 +39,7 @@ Route::group([
 ], function ($router) {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('mandarcorreo', [AuthController::class, 'mandarcorreo']);
-    Route::post('verify-code', 'AuthController@verifyCode')->name('verifyCode')->middleware('limited-access-token');
+    Route::post('verify-code', 'AuthController@verifyCode')->name('verifyCode');
     Route::post('login', 'AuthController@login');
     Route::post('logout', 'AuthController@logout');
     Route::post('refresh', 'AuthController@refresh');

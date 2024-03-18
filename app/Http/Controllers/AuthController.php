@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use Laravel\Sanctum\PersonalAccessToken;
 use App\Mail\AccountActivationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,6 +34,7 @@ class AuthController extends Controller
         $this->middleware('auth:api', ['except' => ['login','register','verifyCode']]);
     }
 
+/*
     public function generateTokenWithCustomGuard($user, $guardName)
     {
         $customClaims = [
@@ -49,7 +51,7 @@ class AuthController extends Controller
 
         return $token;
     }
-
+*/
     /**
      * Get a JWT token via given credentials.
      *
@@ -57,6 +59,32 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
+
+     public function register(Request $request){
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|string|email|unique:users',
+            'password' => 'required|string|confirmed|min:6',
+        ]);
+        if($validator->fails()){
+            return response()->json($validator->errors()->toJson(),400);
+        }
+        $user = User::create(array_merge(
+            $validator->validated(),
+            ['password'=>Hash::make($request->password)]
+        ));
+        
+
+        $url = URL::temporarySignedRoute(
+            'activate', now()->addMinutes(30)
+        );
+
+        Mail::to($user->email)->send(new AccountActivationMail($url));
+        return response()->json([
+            'message' => 'usuario registrado correctamente. verifica tu correo para activar tu cuenta ', 'user'=>$user
+        ],201);
+    }
+
     public function login(Request $request)
     {
         // Validar las credenciales
@@ -71,14 +99,13 @@ class AuthController extends Controller
         }
     
         // Extraer las credenciales de la solicitud
-        $credentials = $request->only('email', 'password');
-    
-        // Intentar autenticar al usuario con las credenciales
-        if (!$tokenjwt = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Credenciales no válidas'], 401);
-        }
         $user = User::where('email', $request->email)->first();
         log::info($user);
+
+        // Intentar autenticar al usuario con las credenciales
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['error' => 'Credenciales no válidas'], 401);
+        }
         if (!$user->is_active) {
             $this->mandarcorreo($user);
             return response()->json([
@@ -87,8 +114,8 @@ class AuthController extends Controller
         }
         
 
-        $jwt = $this->generateTokenWithCustomGuard($user, 'limited-access');
-        $token = $this->respondWithToken($jwt);
+        $token = $user->createToken('access_token')->plainTextToken;
+        
 
         $code = mt_rand(100000, 999999);
         $hashedCode = Hash::make($code);
@@ -98,10 +125,10 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'code' => $hashedCode,
             'expires_at' => $expiresAt, // Agrega la fecha de expiración
-    ]);
+        ]);
 
-    // Enviar el código por correo electrónico
-    Mail::to($user->email)->send(new VerificationCodeMail($code));
+        // Enviar el código por correo electrónico
+        Mail::to($user->email)->send(new VerificationCodeMail($code));
         // Si la autenticación es exitosa, responder con el token
         return response()->json(['message' => 'Verifica tu correo electrónico para obtener el código de verificación.','token'=>$token], 200);
     }
@@ -109,25 +136,41 @@ class AuthController extends Controller
     public function verifyCode(Request $request)
     {
         
-        $credentials = Auth::user();
-        $user = User::where('email', $credentials->email)->first();
+        $token = $request->bearerToken();
 
+        // Si no hay token, devolvemos un error
+        if (!$token) {
+            return response()->json(['error' => 'Token no proporcionado'], 401);
+        }
+
+        // Obtenemos el modelo User asociado con el token de Sanctum
+        $user = PersonalAccessToken::findToken($token)->tokenable;
+
+        // Si no se encuentra el usuario, devolvemos un error
+        if (!$user) {
+            return response()->json(['error' => 'Usuario no encontrado'], 401);
+        }
+
+        // Ahora puedes usar $user para acceder a los datos del usuario autenticado
         log::info($user);
         $code = $request->input('code');
-
         log::info($code);
         //$hashedCode = Hash::make($code);
         $verificationCode = VerificationCode::where('user_id', $user->id)
                                                 //->where('code', $hashedCode)
                                                 ->where('is_used', false)
+                                                ->orderBy('created_at', 'desc')
                                                 ->first();
 
         log::info($verificationCode);
-        
-        if ($verificationCode || !Hash::check($code, $verificationCode->code)) {
+        //Fan #1 de Kory, best kpoper
+        if ($verificationCode && Hash::check($code, $verificationCode->code)) {
 
-            $jwt = $this->generateTokenWithCustomGuard($user, 'all-access');
+            Auth::guard('web')->logout();
+            $user->currentAccessToken()->delete();
+            $jwt = JWTAuth::fromUser($user);
             $token = $this->respondWithToken($jwt);
+            
             // Se marca el codigo como condon usado
             $verificationCode->markAsUsed();
             
@@ -136,9 +179,7 @@ class AuthController extends Controller
                 'token' => $token
             ], 200);
             
-            } 
-            
-            
+            }   
         else {
              // Código incorrecto
             return response()->json(['error' => 'El código de verificación es incorrecto o ha expirado.'], 401);
@@ -191,37 +232,12 @@ class AuthController extends Controller
             'expires_in' => JWTAuth::factory()->getTTL() * 60
         ]);
     }
-    public function register(Request $request){
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|confirmed|min:6',
-        ]);
-    if($validator->fails()){
-        return response()->json($validator->errors()->toJson(),400);
-        }
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password'=>bcrypt($request->password)]
-        ));
-        $token = JWTAuth::fromUser($user);
-        log::info($token);
-
-        $url = URL::temporarySignedRoute(
-            'activate', now()->addMinutes(30), ['token' => $token]
-        );
-
-        Mail::to($user->email)->send(new AccountActivationMail($url));
-        return response()->json([
-            'message' => 'usuario registrado correctamente. verifica tu correo para activar tu cuenta ', 'user'=>$user
-        ],201);
-    }
 
     public function mandarcorreo($user)
     {
-        $token = JWTAuth::fromUser($user);
+        
         $url = URL::temporarySignedRoute(
-            'activate', now()->addMinutes(30), ['token' => $token]
+            'activate', now()->addMinutes(30)
         );
 
         Mail::to($user->email)->send(new AccountActivationMail($url));
