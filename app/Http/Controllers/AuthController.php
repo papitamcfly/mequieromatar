@@ -167,7 +167,12 @@ class AuthController extends Controller
         if ($verificationCode && Hash::check($code, $verificationCode->code)) {
 
             Auth::guard('web')->logout();
-            $user->currentAccessToken()->delete();
+            $currentToken = $user->currentAccessToken();
+            if ($currentToken) {
+                log::info("SALUDOS");
+                $currentToken->delete();
+            }
+            log::info("No saludos");
             $jwt = JWTAuth::fromUser($user);
             $token = $this->respondWithToken($jwt);
             
