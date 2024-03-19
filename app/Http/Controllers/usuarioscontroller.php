@@ -56,15 +56,15 @@ class usuarioscontroller extends Controller
             'rol.required' => 'El campo rol es obligatorio.',
             'rol.exists' => 'El rol seleccionado no existe.', 
         ]);
-    if($validator->fails()){
-        return response()->json($validator->errors()->toJson(),400);
-        }
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password'=>bcrypt($request->password),
-            'is_active' => 1,
-            ]
-        ));
+        if($validator->fails()){
+            return response()->json($validator->errors()->toJson(),400);
+            }
+            $user = User::create(array_merge(
+                $validator->validated(),
+                ['password'=>bcrypt($request->password),
+                'is_active' => 1,
+                ]
+            ));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -198,26 +198,48 @@ class usuarioscontroller extends Controller
         return response()->json($boletos, 200);
     }
     public function logs()
-{
+    {
 
-    $logs = RequestLog::all();
+        $logs = RequestLog::all();
 
 
-    foreach ($logs as $log) {
+        foreach ($logs as $log) {
 
-        $usuario = User::find($log->user);
+            $usuario = User::find($log->user);
 
-        if ($usuario) {
+            if ($usuario) {
 
-            $log->nombre_usuario = $usuario->name;
-            $log->correo_usuario = $usuario->email;
-        } else {
+                $log->nombre_usuario = $usuario->name;
+                $log->correo_usuario = $usuario->email;
+            } else {
 
-            $log->nombre_usuario = 'Usuario desconocido';
-            $log->correo_usuario = 'N/A';
+                $log->nombre_usuario = 'Usuario desconocido';
+                $log->correo_usuario = 'N/A';
+            }
         }
+
+        return response()->json($logs, 200);
     }
 
-    return response()->json($logs, 200);
-}
+    public function activateUser(Request $request, $id)
+    {
+        $user = User::find($id);  
+        if (!$user) {
+            return response()->json(['message' => 'usuario no encontrado'], 404);
+        }
+        $user->can_access_page = true;
+        $user->save();
+        return response()->json(['message' => 'Usuario activado correctamente'], 200);
+    }
+
+    public function deactivateUser(Request $request, $id)
+    {
+        $user = User::find($id);  
+        if (!$user) {
+            return response()->json(['message' => 'usuario no encontrado'], 404);
+        }
+        $user->can_access_page = false;
+        $user->save();
+        return response()->json(['message' => 'Usuario desactivado correctamente'], 200);
+    }
 }
