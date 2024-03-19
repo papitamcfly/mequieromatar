@@ -181,7 +181,7 @@ class AuthController extends Controller
             
             return response()->json([
                 'message' => 'Código de verificación correcto.',
-                'token' => $token
+                'token' => $jwt
             ], 200);
             
             }   
