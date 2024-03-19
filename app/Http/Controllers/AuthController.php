@@ -143,14 +143,18 @@ class AuthController extends Controller
             return response()->json(['error' => 'Token no proporcionado'], 401);
         }
 
-        // Obtenemos el modelo User asociado con el token de Sanctum
-        $user = PersonalAccessToken::findToken($token)->tokenable;
+        $isSanctumToken = preg_match('/^[a-zA-Z0-9\-\_]+\.[a-zA-Z0-9\-\_]+\.[a-zA-Z0-9\-\_]+$/', $token) === 0;
 
-        // Si no se encuentra el usuario, devolvemos un error
-        if (!$user) {
-            return response()->json(['error' => 'Usuario no encontrado'], 401);
+        if (!$isSanctumToken) {
+            return response()->json(['error' => 'Token inválido'], 401);
         }
-
+        
+         // Es un token de Sanctum, obtener el usuario asociado
+        $user = PersonalAccessToken::findToken($token)->tokenable;
+            if (!$user) {
+                return response()->json(['error' => 'Usuario no encontrado'], 401);
+            }
+        
         // Ahora puedes usar $user para acceder a los datos del usuario autenticado
         log::info($user);
         $code = $request->input('code');
@@ -167,17 +171,13 @@ class AuthController extends Controller
         if ($verificationCode && Hash::check($code, $verificationCode->code)) {
 
             Auth::guard('web')->logout();
-            $currentToken = $user->currentAccessToken();
-            if ($currentToken) {
-                log::info("SALUDOS");
-                $currentToken->delete();
-            }
+            $user->tokens()->delete();
             log::info("No saludos");
             $jwt = JWTAuth::fromUser($user);
             $token = $this->respondWithToken($jwt);
             
             // Se marca el codigo como condon usado
-            $verificationCode->markAsUsed();
+            //$verificationCode->markAsUsed();
             
             return response()->json([
                 'message' => 'Código de verificación correcto.',
