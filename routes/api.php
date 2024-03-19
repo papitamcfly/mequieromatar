@@ -120,6 +120,8 @@ Route::middleware(['auth:api',RoleMiddleware::class . ':3'])->group(function () 
     Route::delete('/usuarios/{combo}', [usuarioscontroller::class, 'destroy'])->where('combo', '[0-9]+')->name('deleteusuarios');
     Route::get('/roles',[usuarioscontroller::class,'showroles']);
     Route::get('/logs',[usuarioscontroller::class,'logs']);
+    Route::post('activateUser/{id}', [usuarioscontroller::class, 'activateUser'])->where('id', '[0-9]+')->name('activateUser');
+    Route::post('deactivateUser/{id}', [usuarioscontroller::class, 'deactivateUser'])->where('id', '[0-9]+')->name('deactivateUser');
 });
 Route::resource('posts', PostController::class)->only([
     'destroy', 'show', 'store', 'update'
