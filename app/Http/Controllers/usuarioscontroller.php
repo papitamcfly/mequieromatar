@@ -7,13 +7,32 @@ use App\Models\RequestLog;
 use App\Models\roles;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class usuarioscontroller extends Controller
 {
     public function index()
     {
+        DB::connection()->enableQueryLog();
+
         $boletos = User::all();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json($boletos, 200);
     }
 
@@ -46,6 +65,19 @@ class usuarioscontroller extends Controller
             'is_active' => 1,
             ]
         ));
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+
+        // Obtener información de la petición
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json([
             'message' => 'usuario registrado correctamente. verifica tu correo para activar tu cuenta ', 'user'=>$user
         ],201);
@@ -54,12 +86,29 @@ class usuarioscontroller extends Controller
     
     public function show($id)
     {
+        DB::connection()->enableQueryLog();
+
         $boleto = User::find($id);
 
         if (!$boleto) {
             return response()->json(['message' => 'usuario no encontrado'], 404);
         }
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json($boleto, 200);
     }
 
@@ -96,13 +145,27 @@ class usuarioscontroller extends Controller
         }
 
         $usuario->update($request->all());
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json(['message' => 'usuario actualizado correctamente'], 200);
     }
 
     
     public function destroy($id)
     {
+        DB::connection()->enableQueryLog();
+
         $boleto = User::find($id);
 
         if (!$boleto) {
@@ -110,7 +173,22 @@ class usuarioscontroller extends Controller
         }
 
         $boleto->delete();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'DELETE';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json(['message' => 'usuario eliminado correctamente'], 200);
     }
 
@@ -121,27 +199,25 @@ class usuarioscontroller extends Controller
     }
     public function logs()
 {
-    // Obtener todos los registros de logs
+
     $logs = RequestLog::all();
 
-    // Iterar sobre cada registro de log
+
     foreach ($logs as $log) {
-        // Obtener el usuario correspondiente al ID de usuario en el log
+
         $usuario = User::find($log->user);
 
-        // Verificar si se encontró el usuario
         if ($usuario) {
-            // Asignar el nombre y el correo del usuario al registro de log
+
             $log->nombre_usuario = $usuario->name;
             $log->correo_usuario = $usuario->email;
         } else {
-            // Si no se encuentra el usuario, asignar valores predeterminados
+
             $log->nombre_usuario = 'Usuario desconocido';
             $log->correo_usuario = 'N/A';
         }
     }
 
-    // Retornar los registros de logs con nombres y correos de usuario
     return response()->json($logs, 200);
 }
 }
