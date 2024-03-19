@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Genero;
 use App\Models\Pelicula;
+use App\Models\RequestLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PeliculasController extends Controller
@@ -46,17 +48,47 @@ class PeliculasController extends Controller
     
         // Adjunta los géneros seleccionados a la película
         $pelicula->generos()->attach($request->generos);
-    
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json([
             'message' => 'Película creada correctamente',
             'pelicula' => $pelicula
         ], 201);
     }
     public function destroy($id){
+        DB::connection()->enableQueryLog();
+
         $peli = Pelicula::find($id);
         if (!$peli) return response()->json(['message'=>'combo no encontrado'],404);
         $peli->delete();
-
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        // Obtener el query ejecutado
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+        // Crear un registro en el registro de solicitudes
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'DELETE'; // Método GET para la operación de visualización
+        $log->url = request()->fullUrl(); // URL actual
+        $log->ip = request()->ip(); // IP del cliente
+        $log->agent = request()->userAgent(); // Agente del usuario
+        $log->timestamps = now(); // Marca de tiempo actual
+        $log->query = $query; // Query ejecutado
+        $log->save();
         return response()->json(['message'=>'Pelicula eliminada'],200);
 
     }
@@ -100,25 +132,74 @@ class PeliculasController extends Controller
 
         // Sincronizar las materias asociadas al maestro
         $maestro->generos()->sync($request->generos);
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         // Redireccionar con un mensaje de éxito
         return response()->json(['message'=>'Pelicula actualizada','Pelicula'=>$maestro]);
     }
 
 
     public function index(){
+        DB::connection()->enableQueryLog();
+
         $maestros = Pelicula::with('generos')->get();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        // Obtener el query ejecutado
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+        // Crear un registro en el registro de solicitudes
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; // Método GET para la operación de visualización
+        $log->url = request()->fullUrl(); // URL actual
+        $log->ip = request()->ip(); // IP del cliente
+        $log->agent = request()->userAgent(); // Agente del usuario
+        $log->timestamps = now(); // Marca de tiempo actual
+        $log->query = $query; // Query ejecutado
+        $log->save();
         return response()->json($maestros);
     }
 
     public function show($id)
     {
+        DB::connection()->enableQueryLog();
+
         $Pelicula = Pelicula::with('generos')->get()->find($id);
 
         if (!$Pelicula) {
             return response()->json(['message' => 'Producto no encontrado'], 404);
         }
-
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        // Obtener el query ejecutado
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+        // Crear un registro en el registro de solicitudes
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; // Método GET para la operación de visualización
+        $log->url = request()->fullUrl(); // URL actual
+        $log->ip = request()->ip(); // IP del cliente
+        $log->agent = request()->userAgent(); // Agente del usuario
+        $log->timestamps = now(); // Marca de tiempo actual
+        $log->query = $query; // Query ejecutado
+        $log->save();
         return response()->json($Pelicula, 200);
     }
 }

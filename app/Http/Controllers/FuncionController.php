@@ -6,13 +6,33 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Funcion;
+use App\Models\RequestLog;
+use Illuminate\Support\Facades\DB;
 
 class FuncionController extends Controller
 {
     public function index()
     {
+        DB::connection()->enableQueryLog();
+
         $funciones = Funcion::all();
         return response()->json($funciones, 200);
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+ 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; 
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip(); 
+        $log->agent = request()->userAgent(); 
+        $log->timestamps = now();
+        $log->query = $query;
+        $log->save();
     }
 
     public function store(Request $request)
@@ -37,18 +57,48 @@ class FuncionController extends Controller
         }
 
         Funcion::create($request->all());
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json('Funcion creada correctamente', 201);
     }
 
     public function show($id)
     {
+        DB::connection()->enableQueryLog();
+
         $funcion = Funcion::find($id);
 
         if (!$funcion) {
             return response()->json(['message'=>__('Funcion no encontrada')],404);
         }
-
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        // Obtener el query ejecutado
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+        // Crear un registro en el registro de solicitudes
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; // Método GET para la operación de visualización
+        $log->url = request()->fullUrl(); // URL actual
+        $log->ip = request()->ip(); // IP del cliente
+        $log->agent = request()->userAgent(); // Agente del usuario
+        $log->timestamps = now(); // Marca de tiempo actual
+        $log->query = $query; // Query ejecutado
+        $log->save();
         return response()->json($funcion, 200);
     }
 
@@ -80,12 +130,26 @@ class FuncionController extends Controller
         }
 
         $funcion->update($request->all());
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json('Funcion actualizada correctamente', 201);
     }
 
     public function destroy($id)
     {
+        DB::connection()->enableQueryLog();
+
         $funcion = Funcion::find($id);
 
         if (!$funcion) {
@@ -93,7 +157,23 @@ class FuncionController extends Controller
         }
 
         $funcion->delete();
-
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        // Obtener el query ejecutado
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+        // Crear un registro en el registro de solicitudes
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'DELETE'; // Método GET para la operación de visualización
+        $log->url = request()->fullUrl(); // URL actual
+        $log->ip = request()->ip(); // IP del cliente
+        $log->agent = request()->userAgent(); // Agente del usuario
+        $log->timestamps = now(); // Marca de tiempo actual
+        $log->query = $query; // Query ejecutado
+        $log->save();
         return response()->json(['message' => 'Función eliminada correctamente'], 200);
     }
 }

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
+use App\Models\RequestLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CombosController extends Controller
@@ -41,17 +43,45 @@ class CombosController extends Controller
     
         // Adjunta los géneros seleccionados a la película
         $combo->productos()->attach($request->productos);
-    
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json([
             'message' => 'Combo creado correctamente',
             'combo' => $combo
         ], 201);
     }
     public function destroy($id){
+        DB::connection()->enableQueryLog();
+
         $combo = Combo::find($id);
         if (!$combo) return response()->json(['message'=>'combo no encontrado'],404);
         $combo->delete();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'DELETE'; 
+        $log->url = request()->fullUrl();
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent(); 
+        $log->timestamps = now();
+        $log->query = $query;
+        $log->save();
         return response()->json(['message'=>'combo eliminado'],200);
 
     }
@@ -91,23 +121,67 @@ class CombosController extends Controller
 
         // Sincronizar las materias asociadas al maestro
         $maestro->productos()->sync($request->productos);
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         // Redireccionar con un mensaje de éxito
         return response()->json(['message'=>'combo actualizado','combo'=>$maestro]);
     }
     public function index(){
+        DB::connection()->enableQueryLog();
         $maestros = Combo::with('productos')->get();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; 
+        $log->url = request()->fullUrl();
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent(); 
+        $log->timestamps = now();
+        $log->query = $query;
+        $log->save();
         return response()->json($maestros);
     }
 
     public function show($id)
     {
+        DB::connection()->enableQueryLog();
+
         $Combo = Combo::with('productos')->get()->find($id);
 
         if (!$Combo) {
             return response()->json(['message' => 'Combo no encontrado'], 404);
         }
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET'; 
+        $log->url = request()->fullUrl();
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent(); 
+        $log->timestamps = now();
+        $log->query = $query;
+        $log->save();
         return response()->json($Combo, 200);
     }
 

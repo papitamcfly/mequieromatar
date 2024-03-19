@@ -5,13 +5,33 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cine;
+use App\Models\RequestLog;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class cineController extends Controller
 {
     public function index(){
+        DB::connection()->enableQueryLog();
         $cines =  Cine::all();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json($cines, 200);
+
     }
 
     public function store(Request $request){
@@ -40,16 +60,46 @@ class cineController extends Controller
         }
 
         Cine::create($request->all());
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json('Cine creado correctamente', 201);
     }
 
     public function show($id){
+        DB::connection()->enableQueryLog();
+
         $cine = Cine::find($id);
 
         if(!$cine){
             return response()->json(['message'=> 'Cine no encontrado'],404);
         }
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
+
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'GET';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json($cine, 200);
     }
 
@@ -86,12 +136,25 @@ class cineController extends Controller
         }
 
         $cine->update($request->all());
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
+        // Obtener información de la petición
+        $log = new RequestLog();
+        $log->user = $userId;
+        $log->metodo =$request->method();
+        $log->url =$request->fullUrl();
+        $log->ip = $request->ip();
+        $log->agent = $request->userAgent();
+        $log->timestamps = now();
+        $log->datos = $request->all();
+        $log->save();
         return response()->json($cine);
     }
 
     public function destroy($id)
     {
+        DB::connection()->enableQueryLog();
         $cine = Cine::find($id);
 
         if (!$cine) {
@@ -99,7 +162,22 @@ class cineController extends Controller
         }
 
         $cine->delete();
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
+    
+        $query = DB::getQueryLog();
+        $query = end($query)['query'];
+    
 
+        $log = new RequestLog;
+        $log->user = $userId;
+        $log->metodo = 'DELETE';
+        $log->url = request()->fullUrl(); 
+        $log->ip = request()->ip();
+        $log->agent = request()->userAgent();
+        $log->timestamps = now();
+        $log->query = $query; 
+        $log->save();
         return response()->json(['message' => 'Cine eliminado correctamente'], 200);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\RequestLog;
 use App\Models\roles;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -118,4 +119,29 @@ class usuarioscontroller extends Controller
         $boletos = roles::all();
         return response()->json($boletos, 200);
     }
+    public function logs()
+{
+    // Obtener todos los registros de logs
+    $logs = RequestLog::all();
+
+    // Iterar sobre cada registro de log
+    foreach ($logs as $log) {
+        // Obtener el usuario correspondiente al ID de usuario en el log
+        $usuario = User::find($log->user);
+
+        // Verificar si se encontró el usuario
+        if ($usuario) {
+            // Asignar el nombre y el correo del usuario al registro de log
+            $log->nombre_usuario = $usuario->name;
+            $log->correo_usuario = $usuario->email;
+        } else {
+            // Si no se encuentra el usuario, asignar valores predeterminados
+            $log->nombre_usuario = 'Usuario desconocido';
+            $log->correo_usuario = 'N/A';
+        }
+    }
+
+    // Retornar los registros de logs con nombres y correos de usuario
+    return response()->json($logs, 200);
+}
 }
