@@ -14,6 +14,8 @@ class Funcion extends Model
      *
      * @var array
      */
+
+     protected $table = 'Funciones';
     protected $fillable = [
         'sala_id',
         'pelicula_id',

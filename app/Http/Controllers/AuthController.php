@@ -130,7 +130,7 @@ class AuthController extends Controller
         // Enviar el código por correo electrónico
         Mail::to($user->email)->send(new VerificationCodeMail($code));
         // Si la autenticación es exitosa, responder con el token
-        return response()->json(['message' => 'Verifica tu correo electrónico para obtener el código de verificación.','token'=>$token], 200);
+        return response()->json(['message' => 'Verifica tu correo electrónico para obtener el código de verificación.','token'=>$token ], 200);
     }
 
     public function verifyCode(Request $request)
@@ -148,7 +148,7 @@ class AuthController extends Controller
         if (!$isSanctumToken) {
             return response()->json(['error' => 'Token inválido'], 401);
         }
-        
+
          // Es un token de Sanctum, obtener el usuario asociado
         $user = PersonalAccessToken::findToken($token)->tokenable;
             if (!$user) {
@@ -181,7 +181,8 @@ class AuthController extends Controller
             
             return response()->json([
                 'message' => 'Código de verificación correcto.',
-                'token' => $jwt
+                'token' => $jwt,
+                'rol_id' => $user->rol
             ], 200);
             
             }   

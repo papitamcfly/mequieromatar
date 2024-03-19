@@ -61,7 +61,7 @@ class GenerosController extends Controller
         $log->ip = $request->ip();
         $log->agent = $request->userAgent();
         $log->timestamps = now();
-        $log->datos = $request->all();
+        $log->query = $request->all();
         $log->save();
         return response()->json(['message'=>'genero creado correctamente'],201);
     }
@@ -124,7 +124,7 @@ class GenerosController extends Controller
         $log->ip = $request->ip();
         $log->agent = $request->userAgent();
         $log->timestamps = now();
-        $log->datos = $request->all();
+        $log->query = $request->all();
         $log->save();
 
         return response()->json(['message' => 'Genero actualizado correctamente'], 200);
