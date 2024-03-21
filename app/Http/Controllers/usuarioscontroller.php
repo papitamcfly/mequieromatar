@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class usuarioscontroller extends Controller
 {
@@ -114,52 +115,68 @@ class usuarioscontroller extends Controller
 
     
     public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|confirmed|min:6',
-            'rol' => 'required|exists:roles,id',
-        ],[
-            'name.required' => 'El campo nombre es obligatorio.',
-            'email.required' => 'El campo email es obligatorio.',
-            'email.string' => 'El email debe ser una cadena de texto.',
-            'email.email' => 'El formato del email no es válido.',
-            'email.unique' => 'El email ya está registrado.',
-            'password.required' => 'El campo contraseña es obligatorio.',
-            'password.string' => 'La contraseña debe ser una cadena de texto.',
-            'password.confirmed' => 'La contraseña y la confirmación de contraseña no coinciden.',
-            'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'rol.required' => 'El campo rol es obligatorio.',
-            'rol.exists' => 'El rol seleccionado no existe.', 
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+{
+    $validator = Validator::make($request->all(), [
+        'name' => 'required',
+        'email' => [
+            'required',
+            'string',
+            'email',
+            Rule::unique('users')->ignore($id),
+        ],
+        'password' => 'sometimes|string|confirmed|min:6',
+        'rol' => 'required|exists:roles,id',
+    ], [
+        'name.required' => 'El campo nombre es obligatorio.',
+        'email.required' => 'El campo email es obligatorio.',
+        'email.string' => 'El email debe ser una cadena de texto.',
+        'email.email' => 'El formato del email no es válido.',
+        'email.unique' => 'El email ya está registrado.',
+        'password.required' => 'El campo contraseña es obligatorio.',
+        'password.string' => 'La contraseña debe ser una cadena de texto.',
+        'password.confirmed' => 'La contraseña y la confirmación de contraseña no coinciden.',
+        'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
+        'rol.required' => 'El campo rol es obligatorio.',
+        'rol.exists' => 'El rol seleccionado no existe.', 
+    ]);
 
-        $usuario = User::find($id);
-
-        if (!$usuario) {
-            return response()->json(['message' => 'usuario no encontrado'], 404);
-        }
-
-        $usuario->update($request->all());
-        $user = auth()->user();
-        $userId = $user ? $user->id : null;
-
-        // Obtener información de la petición
-        $log = new RequestLog;
-        $log->user = $userId;
-        $log->metodo =$request->method();
-        $log->url =$request->fullUrl();
-        $log->ip = $request->ip();
-        $log->agent = $request->userAgent();
-        $log->timestamps = now();
-        $log->datos = $request->all();
-        $log->save();
-        return response()->json(['message' => 'usuario actualizado correctamente'], 200);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    $usuario = User::find($id);
+
+    if (!$usuario) {
+        return response()->json(['message' => 'usuario no encontrado'], 404);
+    }
+
+    // Rehashear la contraseña si se proporcionó una nueva
+    if ($request->has('password')) {
+        $usuario->password = bcrypt($request->password);
+    }
+
+    // Actualizar otros campos
+    $usuario->name = $request->name;
+    $usuario->email = $request->email;
+    $usuario->rol = $request->rol;
+
+    $usuario->save();
+
+    // Obtener información de la petición
+    $log = new RequestLog;
+    $log->user = $usuario->id;
+    $log->metodo = $request->method();
+    $log->url = $request->fullUrl();
+    $log->ip = $request->ip();
+    $log->agent = $request->userAgent();
+    $log->timestamps = now();
+    $log->datos = $request->all();
+    $log->save();
+
+    return response()->json(['message' => 'usuario actualizado correctamente'], 200);
+}
+
+
 
     
     public function destroy($id)
