@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FuncionActualizada;
+use App\Events\GeneroActualizado;
 use App\Http\Controllers\Controller;
 use App\Models\Genero;
 use App\Models\RequestLog;
@@ -49,7 +51,8 @@ class GenerosController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        Genero::create($request->all());
+        $genero = Genero::create($request->all());
+        event(new GeneroActualizado($genero));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -113,6 +116,7 @@ class GenerosController extends Controller
         }
         
         $Genero->update($request->all());
+        event(new GeneroActualizado($Genero));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -135,12 +139,13 @@ class GenerosController extends Controller
     {
         $Genero = Genero::find($id);
         DB::connection()->enableQueryLog();
-
+        event(new GeneroActualizado($Genero));
         if (!$Genero) {
             return response()->json(['message' => 'Genero no encontrado'], 404);
         }
 
         $Genero->delete();
+        event(new FuncionActualizada($Genero));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
         $query = DB::getQueryLog();

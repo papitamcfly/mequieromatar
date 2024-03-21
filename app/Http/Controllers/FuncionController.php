@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FuncionActualizada;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -56,7 +57,8 @@ class FuncionController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        Funcion::create($request->all());
+        $funcion =  Funcion::create($request->all());
+ 
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -130,6 +132,7 @@ class FuncionController extends Controller
         }
 
         $funcion->update($request->all());
+        event(new FuncionActualizada($funcion));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -157,6 +160,7 @@ class FuncionController extends Controller
         }
 
         $funcion->delete();
+        event(new FuncionActualizada($funcion));
         $user = auth()->user();
         $userId = $user ? $user->id : null;
     
