@@ -29,7 +29,19 @@ use App\Http\Middleware\RoleMiddleware;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user(); 
 });
+Route::get('/sse', function () {
+    $message = 'Initial message';
+    $eventStream = new Symfony\Component\HttpFoundation\StreamedResponse();
+    $eventStream->headers->set('Content-Type', 'text/event-stream');
+    $eventStream->headers->set('Cache-Control', 'no-cache');
+    $eventStream->headers->set('X-Accel-Buffering', 'no');
+    $eventStream->setCallback(function () use ($message) {
+        echo "data: $message\n\n";
+        flush();
+    });
 
+    return $eventStream;
+})->name('sse.stream');
 
 Route::group([
 

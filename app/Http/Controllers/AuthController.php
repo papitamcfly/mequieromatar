@@ -66,17 +66,18 @@ class AuthController extends Controller
             'email' => 'required|string|email|unique:users',
             'password' => 'required|string|confirmed|min:6',
         ]);
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(),400);
+    if($validator->fails()){
+        return response()->json($validator->errors()->toJson(),400);
         }
         $user = User::create(array_merge(
             $validator->validated(),
-            ['password'=>Hash::make($request->password)]
+            ['password'=>bcrypt($request->password)]
         ));
-        
+        $token = JWTAuth::fromUser($user);
+        log::info($token);
 
         $url = URL::temporarySignedRoute(
-            'activate', now()->addMinutes(30)
+            'activate', now()->addMinutes(30), ['token' => $token]
         );
 
         Mail::to($user->email)->send(new AccountActivationMail($url));

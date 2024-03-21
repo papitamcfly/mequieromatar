@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ProductoCreado;
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Models\RequestLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProductosController extends Controller
 {
@@ -51,7 +53,8 @@ class ProductosController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        Producto::create($request->all());     
+        $producto = Producto::create($request->all());  
+        $this->sendSseEvent('new_product', $producto);
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -67,7 +70,28 @@ class ProductosController extends Controller
         $log->save();
         return response()->json(['message'=>'producto creado correctamente'],201);
     }
+    protected function sendSseEvent($event, $data)
+    {
+        // Enviar evento SSE a todos los clientes
+        $response = new StreamedResponse(function () use ($event, $data) {
+            while (true) {
+            echo "event: $event\n";
+            echo 'data: ' . json_encode($data) . "\n\n";
+            ob_flush();
+            flush();
 
+            // Break the loop if the client aborted the connection (closed the page)
+            if (connection_aborted()) {break;}
+            usleep(50000); // 50ms
+            }
+        });
+
+        $response->headers->set('Content-Type', 'text/event-stream');
+        $response->headers->set('Cache-Control', 'no-cache');
+        $response->headers->set('Connection', 'keep-alive');
+
+        $response->send();
+    }
     public function show($id)
     {
         DB::connection()->enableQueryLog();
