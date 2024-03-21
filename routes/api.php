@@ -10,6 +10,7 @@ use App\Http\Controllers\GenerosController;
 use App\Http\Controllers\PeliculasController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductosController;
+use App\Http\Controllers\SSEController;
 use App\Http\Controllers\usuarioscontroller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,19 +30,7 @@ use App\Http\Middleware\RoleMiddleware;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user(); 
 });
-Route::get('/sse', function () {
-    $message = 'Initial message';
-    $eventStream = new Symfony\Component\HttpFoundation\StreamedResponse();
-    $eventStream->headers->set('Content-Type', 'text/event-stream');
-    $eventStream->headers->set('Cache-Control', 'no-cache');
-    $eventStream->headers->set('X-Accel-Buffering', 'no');
-    $eventStream->setCallback(function () use ($message) {
-        echo "data: $message\n\n";
-        flush();
-    });
-
-    return $eventStream;
-})->name('sse.stream');
+Route::get('/sse', [SSEController::class ,'sendSSE']);
 
 Route::group([
 
