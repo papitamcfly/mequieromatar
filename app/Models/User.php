@@ -24,10 +24,13 @@ class User extends Authenticatable implements JWTSubject
         return $this->belongsTo(roles::class,'rol');
     }
     
-
-    public function boletos()
+    public function juegos1()
     {
-        return $this->hasMany(Boleto::class, 'id_user');
+        return $this->hasMany(Juego::class, 'jugador1');
+    }
+    public function juegos2()
+    {
+        return $this->hasMany(Juego::class, 'jugador2');
     }
     
     /**

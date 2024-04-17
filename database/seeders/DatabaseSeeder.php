@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         DB::table('users')->insert([
-            'name' => 'emiliano',
-            'email' => 'fehane91@gmail.com',
+            'name' => 'Ivan',
+            'email' => 'joseivan1109@gmail.com',
             'email_verified_at' => null,
             'password' => bcrypt('123456'),
             'rol' => 1, // Asignar el ID del rol correspondiente

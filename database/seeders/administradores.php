@@ -17,8 +17,8 @@ class administradores extends Seeder
     DB::table('users')->insert([
         [
             'name' => 'administrador2',
-            'email' => '22170120@uttcampus.edu.mx',
-            'password' => Hash::make('papitaman'), // Encriptar la contraseña
+            'email' => 'joseivan1109@gmail.com',
+            'password' => Hash::make('123456'), // Encriptar la contraseña
             'rol' => 3,
             'is_active' => 1
         ]
