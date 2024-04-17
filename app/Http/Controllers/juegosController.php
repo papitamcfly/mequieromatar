@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Juego;
+use App\Events\estadoPartida;
 
 class juegosController extends Controller
 {
@@ -26,6 +27,7 @@ class juegosController extends Controller
             'puntuacion2' => $request->puntuacion2,
             'estado' => 'en espera'
         ]);
+        event(new estadoPartida($juego));
         $juego->save();
         return response()->json([
             'message' => 'Partida creada, esperando 2do jugador',
@@ -68,6 +70,7 @@ class juegosController extends Controller
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
             $juego->estado = $request->estado;
+            event(new estadoPartida($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Partida actualizada',
@@ -79,7 +82,9 @@ class juegosController extends Controller
         $juego = Juego::find($id);
         if ($juego){
             $juego->jugador2 = $request->jugador2;
+            $juego->save();
             $juego->estado = 'en proceso';
+            event(new estadoPartida($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Jugador 2 se ha unido al juego',
@@ -94,6 +99,7 @@ class juegosController extends Controller
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
             $juego->estado = 'finalizado';
+            event(new estadoPartida($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Partida finalizada',
@@ -107,6 +113,7 @@ class juegosController extends Controller
         if ($juego){
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
+            event(new estadoPartida($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Puntuaciones actualizadas',
