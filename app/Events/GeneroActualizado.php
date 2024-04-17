@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Genero;
+use App\Models\Juego;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -17,7 +18,7 @@ class GeneroActualizado implements ShouldBroadcast
 
     public $genero;
 
-    public function __construct(Genero $genero)
+    public function __construct(Juego $genero)
     {
         $this->genero = $genero;
     }

@@ -26,7 +26,18 @@ class DatabaseSeeder extends Seeder
             'email' => 'joseivan1109@gmail.com',
             'email_verified_at' => null,
             'password' => bcrypt('123456'),
-            'rol' => 1, // Asignar el ID del rol correspondiente
+            'rol' => 3, // Asignar el ID del rol correspondiente
+            'is_active' => true,
+            'created_at' => null,
+            'updated_at' => null,
+        ]);
+
+        DB::table('users')->insert([
+            'name' => 'Ivan',
+            'email' => 'tolucavolpi666@gmail.com',
+            'email_verified_at' => null,
+            'password' => bcrypt('123456'),
+            'rol' => 3, // Asignar el ID del rol correspondiente
             'is_active' => true,
             'created_at' => null,
             'updated_at' => null,

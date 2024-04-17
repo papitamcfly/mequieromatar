@@ -60,6 +60,15 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
 
+
+     public function getCurrentUserId()
+     {
+         $user = $this->guard()->user();
+         if ($user) {
+             return $user->id;
+         }
+         return response()->json(['error' => 'Usuario no encontrado'], 401);
+     }
      public function register(Request $request){
         $validator = Validator::make($request->all(), [
             'name' => 'required',

@@ -12,7 +12,8 @@ use Illuminate\Validation\Rule;
 use App\Models\RequestLog;
 
 class usuarioscontroller extends Controller
-{
+{   
+
     public function index()
     {
         DB::connection()->enableQueryLog();

@@ -2,32 +2,33 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
+use App\Models\Genero;
 use App\Models\Juego;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class estadoPartida
+class estadoPartida implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $juego;
-    
-    public function __construct(Juego $juego)
+    public $genero;
+
+    public function __construct(Juego $genero)
     {
-        $this->juego = $juego;
-    }
-    public function broadcastOn()
-    {
-        return new PrivateChannel('channel-juego');
+        $this->genero = $genero;
     }
 
+    public function broadcastOn()
+    {
+        return new Channel('genero-channel');
+    }
     public function broadcastAs()
     {
-        return 'partidaIniciada';
+        return 'Partidainicio';
     }
 }

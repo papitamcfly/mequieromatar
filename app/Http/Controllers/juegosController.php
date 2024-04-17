@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Juego;
 use App\Events\estadoPartida;
+use App\Events\GeneroActualizado;
 
 class juegosController extends Controller
 {
@@ -15,19 +16,19 @@ class juegosController extends Controller
             'jugador2' => 'nullable|integer',
             'puntuacion1' => 'nullable|integer',
             'puntuacion2' => 'nullable|integer',
-            'estado' => 'string'
+            'estado' => 'nullable|string'
         ]);
         if ($validator->fails()){
             return response()->json($validator->errors(), 400);
         }
         $juego = Juego::create([
             'jugador1' => $request->jugador1,
-            'jugador2' => $request->jugador2,
+            'jugador2' => null,
             'puntuacion1' => $request->puntuacion1,
             'puntuacion2' => $request->puntuacion2,
             'estado' => 'en espera'
         ]);
-        event(new estadoPartida($juego));
+        event(new GeneroActualizado($juego));
         $juego->save();
         return response()->json([
             'message' => 'Partida creada, esperando 2do jugador',
@@ -78,8 +79,8 @@ class juegosController extends Controller
         }
         return response()->json(['message' => 'Partida no encontrada'], 404);
     }
-    public function joinGame(Request $request, $id){
-        $juego = Juego::find($id);
+    public function joinGame(Request $request){
+        $juego = Juego::find($request->jugador2);
         if ($juego){
             $juego->jugador2 = $request->jugador2;
             $juego->save();
@@ -99,10 +100,23 @@ class juegosController extends Controller
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
             $juego->estado = 'finalizado';
-            event(new estadoPartida($juego));
+            event(new GeneroActualizado($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Partida finalizada',
+                'juego' => $juego], 200);
+        }
+        return response()->json(['message' => 'Partida no encontrada'], 404);
+    }
+
+    public function cancelGame($id){
+        $juego = Juego::find($id);
+        if ($juego){
+            $juego->estado = 'cancelado';
+            event(new GeneroActualizado($juego));
+            $juego->save();
+            return response()->json([
+                'message' => 'Partida cancelada',
                 'juego' => $juego], 200);
         }
         return response()->json(['message' => 'Partida no encontrada'], 404);
@@ -113,7 +127,7 @@ class juegosController extends Controller
         if ($juego){
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
-            event(new estadoPartida($juego));
+            event(new GeneroActualizado($juego));
             $juego->save();
             return response()->json([
                 'message' => 'Puntuaciones actualizadas',

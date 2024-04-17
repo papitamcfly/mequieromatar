@@ -45,12 +45,13 @@ Route::middleware(['auth:api', RoleMiddleware::class . ':3'])->group(function ()
     Route::post('/juego', [juegosController::class, 'store'])->name('createJuego');
     Route::get('/juego', [juegosController::class, 'indexEnEspera'])->name('indexEnEspera');
     Route::get('/finalizados', [juegosController::class, 'indexFinalizados'])->name('indexFinalizados');
-    Route::put('/juego/{id}', [juegosController::class, 'joinGame'])->where('id', '[0-9]+')->name('joinGame');
-    Route::put('/juego/{id}/finalizar', [juegosController::class, 'finishGame'])->where('id', '[0-9]+')->name('finishGame');
-    Route::put('/juego/{id}', [juegosController::class, 'updateScore'])->where('id', '[0-9]+')->name('updateScore');
+    Route::put('/juego', [juegosController::class, 'joinGame'])->name('joinGame');
+    Route::put('/juego/finalizar', [juegosController::class, 'finishGame'])->name('finishGame');
+    Route::put('/juego/score', [juegosController::class, 'updateScore'])->name('updateScore');
 });
 
 Route::middleware(['auth:api',RoleMiddleware::class . ':3'])->group(function () {
+    Route::get('/usuarios/current', [AuthController::class, 'getCurrentUserId'])->name('usuarioId');
     Route::get('/usuarios', [usuarioscontroller::class, 'index'])->name('allusuarios');
     Route::post('/usuarios', [usuarioscontroller::class, 'store'])->name('createusuarios');
     Route::get('/usuarios/{combo}', [usuarioscontroller::class, 'show'])->where('combo', '[0-9]+')->name('showusuarios');
