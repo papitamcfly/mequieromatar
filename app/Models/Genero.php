@@ -12,7 +12,5 @@ class Genero extends Model
     protected $table = 'generos';
     protected $fillable = ['nombre'];
     public $timestamps = false;
-    public function peliculas(){
-        return $this->belongsToMany(Pelicula::class, 'pelicula_pelicula_generos', 'pelicula_id', 'genero_pelicula_id');
-    }
+
 }

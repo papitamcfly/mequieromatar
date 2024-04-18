@@ -44,8 +44,9 @@ Route::group([
 Route::middleware(['auth:api', RoleMiddleware::class . ':3'])->group(function () {
     Route::post('/juego', [juegosController::class, 'store'])->name('createJuego');
     Route::get('/juego', [juegosController::class, 'indexEnEspera'])->name('indexEnEspera');
+    Route::get('/juego/{id}', [juegosController::class, 'show'])->where('id', '[0-9]+')->name('showJuego');
     Route::get('/finalizados', [juegosController::class, 'indexFinalizados'])->name('indexFinalizados');
-    Route::put('/juego', [juegosController::class, 'joinGame'])->name('joinGame');
+    Route::put('/juego/{id}', [juegosController::class, 'joinGame'])->where('id', '[0-9]+')->name('joinGame');
     Route::put('/juego/finalizar', [juegosController::class, 'finishGame'])->name('finishGame');
     Route::put('/juego/score', [juegosController::class, 'updateScore'])->name('updateScore');
 });

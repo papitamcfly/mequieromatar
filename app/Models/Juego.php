@@ -9,6 +9,8 @@ class Juego extends Model
 {
     use HasFactory;
     protected $table = 'juegos';
+
+    public $timestamps = false;
     protected $fillable = ['jugador1', 'jugador2', 'puntuacion1', 'puntuacion2', 'estado'];
     public function jugador1()
     {
