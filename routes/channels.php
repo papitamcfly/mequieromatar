@@ -19,6 +19,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('genero-channel', function ($user) {
     return true;
 });
-Broadcast::channel('channel-juego', function ($user) {
+Broadcast::channel('change-channel', function ($user) {
     return true;
 });

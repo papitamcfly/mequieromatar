@@ -44,11 +44,16 @@ Route::group([
 Route::middleware(['auth:api', RoleMiddleware::class . ':3'])->group(function () {
     Route::post('/juego', [juegosController::class, 'store'])->name('createJuego');
     Route::get('/juego', [juegosController::class, 'indexEnEspera'])->name('indexEnEspera');
+    Route::post('/juego/casilla', [juegosController::class, 'receiveCasilla']);
     Route::get('/juego/{id}', [juegosController::class, 'show'])->where('id', '[0-9]+')->name('showJuego');
-    Route::get('/finalizados', [juegosController::class, 'indexFinalizados'])->name('indexFinalizados');
+    Route::get('/juego/finalizados', [juegosController::class, 'indexFinalizados'])->name('indexFinalizados');
     Route::put('/juego/{id}', [juegosController::class, 'joinGame'])->where('id', '[0-9]+')->name('joinGame');
-    Route::put('/juego/finalizar', [juegosController::class, 'finishGame'])->name('finishGame');
-    Route::put('/juego/score', [juegosController::class, 'updateScore'])->name('updateScore');
+    Route::put('/juego/finalizar/{id}', [juegosController::class, 'finishGame'])->where('id', '[0-9]+')->name('finishGame');
+    Route::put('/juego/score/{id}', [juegosController::class, 'updateScore'])->where('id', '[0-9]+')->name('updateScore');
+    Route::get('/juego/change', [juegosController::class, 'changescreen'])->name('changescreen');
+    Route::get('/juego/usuarios/{id}', [juegosController::class, 'getUserId'])->where('id', '[0-9]+')->name('getUserId');
+    Route::put('/juego/turno/{id}', [juegosController::class, 'nextTurn'])->where('id', '[0-9]+')->name('updateTurno');
+    Route::put('/juego/cancelar/{id}', [juegosController::class, 'cancelGame'])->where('id', '[0-9]+');
 });
 
 Route::middleware(['auth:api',RoleMiddleware::class . ':3'])->group(function () {

@@ -42,5 +42,36 @@ class DatabaseSeeder extends Seeder
             'created_at' => null,
             'updated_at' => null,
         ]);
+
+        $juegos = [
+            [
+            'jugador1' => 1,
+            'jugador2' => 2,
+            'puntuacion1' => 8,
+            'puntuacion2' => 7,
+            'estado' => 'finalizado',
+            'ganador' => 1
+            ],
+            [
+            'jugador1' => 2,
+            'jugador2' => 1,
+            'puntuacion1' => 7,
+            'puntuacion2' => 8,
+            'estado' => 'finalizado',
+            'ganador' => 2
+            ],
+            [
+                'jugador1' => 1,
+                'jugador2' => 2,
+                'puntuacion1' => 7,
+                'puntuacion2' => 8,
+                'estado' => 'finalizado',
+                'ganador' => 2
+                ],
+        ];
+
+        foreach ($juegos as $juego) {
+            DB::table('juegos')->insert($juego);
+        }
     }
 }

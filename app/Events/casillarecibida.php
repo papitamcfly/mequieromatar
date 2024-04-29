@@ -12,22 +12,29 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class estadoPartida implements ShouldBroadcast
+class CasillaRecibida implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $genero;
+    public $casilla;
 
-    public function __construct()
+    public function __construct($casilla)
     {
+        $this->casilla = $casilla;
     }
 
     public function broadcastOn()
     {
-        return new Channel('change-channel');
+        return new Channel('genero-channel');
     }
+
     public function broadcastAs()
     {
-        return 'estadoPartida';
+        return 'casilla';
+    }
+
+    public function broadcastWith()
+    {
+        return ['casilla' => $this->casilla];
     }
 }

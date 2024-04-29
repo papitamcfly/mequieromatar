@@ -12,22 +12,23 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class estadoPartida implements ShouldBroadcast
+class cambioTurno implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $genero;
 
-    public function __construct()
+    public function __construct(Juego $genero)
     {
+        $this->genero = $genero;
     }
 
     public function broadcastOn()
     {
-        return new Channel('change-channel');
+        return new Channel('genero-channel');
     }
     public function broadcastAs()
     {
-        return 'estadoPartida';
+        return 'cambioTurno';
     }
 }

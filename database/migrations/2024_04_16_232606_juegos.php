@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('puntuacion1')->nullable();
             $table->integer('puntuacion2')->nullable();
             $table->string('estado');
+            $table->unsignedBigInteger('ganador')->nullable();
         });
     }
 

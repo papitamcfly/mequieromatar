@@ -11,7 +11,7 @@ class Juego extends Model
     protected $table = 'juegos';
 
     public $timestamps = false;
-    protected $fillable = ['jugador1', 'jugador2', 'puntuacion1', 'puntuacion2', 'estado'];
+    protected $fillable = ['jugador1', 'jugador2', 'puntuacion1', 'puntuacion2', 'estado', 'ganador'];
     public function jugador1()
     {
         return $this->belongsTo(User::class, 'jugador1');

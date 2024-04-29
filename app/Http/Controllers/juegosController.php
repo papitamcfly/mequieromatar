@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\cambiorealizado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Juego;
 use App\Events\estadoPartida;
 use App\Events\GeneroActualizado;
+use App\Events\marcador;
+use App\Events\CasillaRecibida;
 
 class juegosController extends Controller
 {   
@@ -83,7 +86,7 @@ class juegosController extends Controller
             $juego->jugador2 = $request->jugador2;
             $juego->save();
             $juego->estado = 'en proceso';
-            event(new estadoPartida($juego));
+            event(new estadoPartida());
             $juego->save();
             return response()->json($juego, 200);
         }
@@ -93,8 +96,7 @@ class juegosController extends Controller
     public function finishGame(Request $request, $id){
         $juego = Juego::find($id);
         if ($juego){
-            $juego->puntuacion1 = $request->puntuacion1;
-            $juego->puntuacion2 = $request->puntuacion2;
+            $juego->ganador = $request->ganador;
             $juego->estado = 'finalizado';
             event(new GeneroActualizado($juego));
             $juego->save();
@@ -119,10 +121,24 @@ class juegosController extends Controller
         if ($juego){
             $juego->puntuacion1 = $request->puntuacion1;
             $juego->puntuacion2 = $request->puntuacion2;
-            event(new GeneroActualizado($juego));
+            event(new marcador($juego));
             $juego->save();
             return response()->json($juego, 200);
         }
         return response()->json(['message' => 'Partida no encontrada'], 404);
-    }
+ }
+ public function changescreen(){
+    event(new cambiorealizado());
+ }
+
+public function getUserId($id){
+    $juegos = Juego::where('jugador1', $id)->where('estado', 'finalizado')->get();
+    return response()->json($juegos, 200);
+}
+
+public function receiveCasilla(Request $request){
+    $casilla = $request->casilla;
+    event(new CasillaRecibida($casilla));
+    return response()->json($casilla, 200);
+}
 }
